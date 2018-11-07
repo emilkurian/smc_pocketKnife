@@ -1,0 +1,8 @@
+[0:0:0:0]    disk    SEAGATE  ST33000650SS     0004  /dev/sda   /dev/sg0 
+[0:0:1:0]    disk    SEAGATE  ST33000650SS     0004  /dev/sdb   /dev/sg1 
+[0:0:2:0]    disk    SEAGATE  ST33000650SS     0004  /dev/sdc   /dev/sg2 
+[0:0:3:0]    disk    SEAGATE  ST33000650SS     0004  /dev/sdd   /dev/sg3 
+[0:0:4:0]    disk    ATA      ST2000NM0011     SN02  /dev/sde   /dev/sg4 
+[0:0:5:0]    disk    ATA      ST6000NM0024-1HT SN02  /dev/sdf   /dev/sg5 
+[0:0:6:0]    enclosu LSI      SAS3x28          0601  -          /dev/sg6 
+[10:0:0:0]   disk    ATA      SATA SSD         S9FM  /dev/sdg   /dev/sg7 

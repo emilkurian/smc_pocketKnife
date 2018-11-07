@@ -4,8 +4,8 @@ from operator import itemgetter
 drives_list = list()
 drives_dict = dict()
 
-for drive_string in open("m04_lab_profiles"):
-    drive_info_list = drive_string.strip().split(',')
+for drive_string in open("/home/joshua/pocketKnife/drives.txt"):
+    drive_info_list = drive_string.strip().split('  ')
     print(drive_info_list)
 
     drive_info = dict()
@@ -22,15 +22,14 @@ for drive_string in open("m04_lab_profiles"):
 	
 
 for drive_info in drives_dict["Drive"]:
-
-        print("{0:24}   {1:10}   {2:8,.2f}".format(drive_info['Drive'],
-                                                   drive_info['Logic'],
-                                                   drive_info['Exp']))
+    print("{0:24}   {1:10}   {2:8,.2f}".format(drive_info['Drive'],
+                                               drive_info['Logic'],
+                                               drive_info['Exp']))
 												   
 												   
 def ledBlink(slotID, expanderID):
-	subprocess.run(["sudo","sg_ses",f"--descriptor={slotID}","--set=ident",f"{expanderID}"])
+    subprocess.run(["sudo","sg_ses",f"--descriptor={slotID}","--set=ident",f"{expanderID}"])
 	
 	
 def ledStop(slotID, expanderID):
-	subprocess.run(["sudo","sg_ses",f"--descriptor={slotID}","--clear=ident",f"{expanderID}"])
+    subprocess.run(["sudo","sg_ses",f"--descriptor={slotID}","--clear=ident",f"{expanderID}"])
