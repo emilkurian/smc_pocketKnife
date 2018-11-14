@@ -1,0 +1,7 @@
+[0:0:0:0]    disk    sas:0x5000c50041d071b1          /dev/sda   /dev/sg0   3.00TB
+[0:0:1:0]    disk    sas:0x5000c50041d09c89          /dev/sdb   /dev/sg1   3.00TB
+[0:0:2:0]    disk    sas:0x5000c50041d07761          /dev/sdc   /dev/sg2   3.00TB
+[0:0:3:0]    disk    sas:0x5000c50041d06729          /dev/sdd   /dev/sg3   3.00TB
+[0:0:4:0]    disk    sas:0x500304801f68fd08          /dev/sde   /dev/sg4   2.00TB
+[0:0:5:0]    disk    sas:0x500304801f68fd0a          /dev/sdf   /dev/sg5   2.00TB
+[0:0:6:0]    disk    sas:0x500304801f68fd0b          /dev/sdg   /dev/sg6   6.00TB

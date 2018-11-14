@@ -3,12 +3,14 @@
 PWD=$(pwd)
 echo "$PWD"
 
-lsscsi -g > /home/joshua/pocketKnife/dump.txt 
-awk '{print $4"\t"$6"\t"$7"\t"$8}' /home/joshua/pocketKnife/dump.txt > /home/joshua/pocketKnife/drives.txt
+lsscsi -g -t | grep sas | grep disk > /home/joshua/pocketKnife/dump.txt 
+awk '{print $3","$4","$5}' /home/joshua/pocketKnife/dump.txt > /home/joshua/pocketKnife/drives.txt
 rm /home/joshua/pocketKnife/dump.txt
 
 
-
+file="/home/joshua/pocketKnife/drives.txt"
+while IFS="," read -r f1 f2 f3
+do 
 
 
 
