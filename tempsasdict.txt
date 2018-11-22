@@ -1,0 +1,6 @@
+sas:0x5000c50041d071b1  /dev/sda
+sas:0x5000c50041d09c89  /dev/sdb
+sas:0x5000c50041d06729  /dev/sdd
+sas:0x500304801f68fd08  /dev/sde
+sas:0x500304801f68fd0a  /dev/sdf
+sas:0x500304801f68fd0b  /dev/sdg

@@ -26,10 +26,15 @@ def getSASaddr(slotList):
     for tup in slotList:
         subprocess.run(["sudo","./sasAddr.sh",f"{tup[0]}",f"{tup[1]}"])
         for sasAddr in open("sasAddr.txt"):
+            #print(sasAddr)
+            tup.append(sasAddr)
+            print(tup)
             subprocess.run(["sudo","./logicName.sh",f"{sasAddr}"])
             for name in open("logicName.txt"):
-                tup.append(sasAddr)
+                subprocess.run(["sudo","cat","logicName.txt"])
+                #print(name)
                 tup.append(name)
+                #print(tup)
 		
     return slotList
 
@@ -50,5 +55,5 @@ encList = getEncl()
 numList = getNumSlots(encList)
 driveInfo = getSASaddr(numList)
 
-print(driveInfo)
+#print(driveInfo)
 
