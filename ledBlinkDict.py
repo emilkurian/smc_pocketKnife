@@ -1,4 +1,5 @@
 import subprocess
+import json
 
 drive_dict = dict()
 sas_dict = dict()
@@ -33,8 +34,8 @@ def createSASDict(): #key: sas address, value: logical name
         key=tokens.pop().strip()
         #print(key,value)    
         sas_dict[key]=value
-    print("SAS Dictionary")
-    print(sas_dict)
+    #print("SAS Dictionary")
+    #print(sas_dict)
 
 def createFullDict(): #key: logical name, value: infoList [encIDString, SlotString, sas address, other info if needed]
     encList = getEncl()
@@ -68,8 +69,10 @@ def createFullDict(): #key: logical name, value: infoList [encIDString, SlotStri
                 drive_dict[logicName]=newinfo
         else:
             drive_dict[logicName]=newinfo
-    print("Drive Dictionary")
-    print(drive_dict) #TODO: Make printout of dictionary more reader-friendly
+    #print("Drive Dictionary")
+    #print(drive_dict) #TODO: Make printout of dictionary more reader-friendly
+    with open('driveJSON.txt', 'w') as file:
+        file.write(json.dumps(drive_dict))
 	
 def getSASaddr(slotList):
     for tup in slotList:
@@ -129,21 +132,18 @@ def ledBlinkQuery():
             else: #all other standard logical names
                 #print("Standard Logical Name Case")
                 ledStop(infoList[0],infoList[1])    
+    elif startOrStop=="Update"
+         updateDict()
     else:
         print("This function only accepts On or Off as a parameter")
 	
 def ledStop(expanderID, slotID):
     subprocess.run(["sudo","sg_ses",f"--descriptor={slotID}","--clear=ident",f"{expanderID}"])
-	 
-def printWorld():
-    print("Working")
-    return [1,2,3]
+
+def updateDict()
+    createSASDict()
+    createFullDict()
 
 
-
-
-
-createSASDict()
-createFullDict()
-
+updateDict()
 ledBlinkQuery()
