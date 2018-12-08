@@ -99,6 +99,14 @@ def driveDump(testDict):
 def driveRead():
     with open('test.json') as handle:
         return json.loads(handle.read())
+        
+        
+def compareDict(drive_dict(), dictImport()):
+    dictSet = set(drive_dict.keys())
+    importSet = set(dictImport.keys())
+    diff = importSet.difference(dictSet)
+    for drives in diff:
+        print("Drive "+drives+" is missing")
 
 
 def ledBlink(expanderID, slotID):
