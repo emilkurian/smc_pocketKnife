@@ -4,6 +4,7 @@ import json
 drive_dict = dict()
 sas_dict = dict()
 
+
 def getEncl():
     encsList = list()
     subprocess.run(["sudo","./encList.sh"])
@@ -22,7 +23,8 @@ def getNumSlots(encList):
             slotList.append(tup)
 		
     return slotList
-	
+
+
 def createSASDict(): #key: sas address, value: logical name
     subprocess.run(["sudo","./sasDict.sh"])
     file=iter(open("/home/joshua/pocketKnife/sasDict.txt"))
@@ -71,9 +73,8 @@ def createFullDict(): #key: logical name, value: infoList [encIDString, SlotStri
             drive_dict[logicName]=newinfo
     #print("Drive Dictionary")
     #print(drive_dict) #TODO: Make printout of dictionary more reader-friendly
-    with open('driveJSON.txt', 'w') as file:
-        file.write(json.dumps(drive_dict))
-	
+    
+    
 def getSASaddr(slotList):
     for tup in slotList:
         subprocess.run(["sudo","./sasAddr.sh",f"{tup[0]}",f"{tup[1]}"])
@@ -89,10 +90,29 @@ def getSASaddr(slotList):
             #    #print(tup)	
     return slotList
             #return sasAddr #return as string instead of as SASAddress appended to end of List
+            
+def driveDump(testDict):
+    with open('test.json', 'w') as file:
+        file.write(json.dumps(testDict))
+        
+        
+def driveRead():
+    with open('test.json') as handle:
+        return json.loads(handle.read())
+        
+        
+def compareDict(drive_dict(), dictImport()):
+    dictSet = set(drive_dict.keys())
+    importSet = set(dictImport.keys())
+    diff = importSet.difference(dictSet)
+    for drives in diff:
+        print("Drive "+drives+" is missing")
 
 
 def ledBlink(expanderID, slotID):
     subprocess.run(["sudo","sg_ses",f"--descriptor={slotID}","--set=ident",f"{expanderID}"])
+    print(f"Activated {slotID} on Expander {expanderID}")
+
 
 def ledBlinkQuery():
     startOrStop=input("Do you want to turn LEDs On or Off? (On/Off) ").strip()
@@ -139,11 +159,31 @@ def ledBlinkQuery():
 	
 def ledStop(expanderID, slotID):
     subprocess.run(["sudo","sg_ses",f"--descriptor={slotID}","--clear=ident",f"{expanderID}"])
+    print(f"Deactivated {slotID} on Expander {expanderID}")
 
 def updateDict():
     createSASDict()
     createFullDict()
 
+
+test = "Test program for Arguments"
+
+parser = argparse.ArgumentParser(description = test)
+group = parser.add_mutually_exclusive_group()
+group.add_argument("-S", "--store", help="store drive info", action="store_true")
+group.add_argument("-D", "--dump", help="dump drive info", action="store_true")
+
+args = parser.parse_args()
+
+if args.store:
+    updateDict()
+    driveDump(drive_dict)
+    exit()
+elif args.dump:
+    dictDump = driveRead()
+else:
+    print("loading util")
+    
 
 updateDict()
 ledBlinkQuery()
