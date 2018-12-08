@@ -132,15 +132,15 @@ def ledBlinkQuery():
             else: #all other standard logical names
                 #print("Standard Logical Name Case")
                 ledStop(infoList[0],infoList[1])    
-    elif startOrStop=="Update"
-         updateDict()
+   # elif startOrStop=="Update":
+   #      updateDict()
     else:
         print("This function only accepts On or Off as a parameter")
 	
 def ledStop(expanderID, slotID):
     subprocess.run(["sudo","sg_ses",f"--descriptor={slotID}","--clear=ident",f"{expanderID}"])
 
-def updateDict()
+def updateDict():
     createSASDict()
     createFullDict()
 
