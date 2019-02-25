@@ -1,8 +1,0 @@
-/dev/sda
-/dev/sdb
-/dev/sdd
-/dev/sde
-/dev/sdf
-/dev/sdg
--
-/dev/sdh

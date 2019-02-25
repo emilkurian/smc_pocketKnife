@@ -1,7 +1,0 @@
-sas:0x5000c50041d071b1,/dev/sda,/dev/sg0
-sas:0x5000c50041d09c89,/dev/sdb,/dev/sg1
-sas:0x5000c50041d07761,/dev/sdc,/dev/sg2
-sas:0x5000c50041d06729,/dev/sdd,/dev/sg3
-sas:0x500304801f68fd08,/dev/sde,/dev/sg4
-sas:0x500304801f68fd0a,/dev/sdf,/dev/sg5
-sas:0x500304801f68fd0b,/dev/sdg,/dev/sg6

@@ -1,6 +1,0 @@
-[0:0:0:0]    disk    sas:0x5000c50041d071b1          /dev/sda 
-[0:0:1:0]    disk    sas:0x5000c50041d09c89          /dev/sdb 
-[0:0:3:0]    disk    sas:0x5000c50041d06729          /dev/sdd 
-[0:0:4:0]    disk    sas:0x500304801f68fd08          /dev/sde 
-[0:0:5:0]    disk    sas:0x500304801f68fd0a          /dev/sdf 
-[0:0:6:0]    disk    sas:0x500304801f68fd0b          /dev/sdg 
