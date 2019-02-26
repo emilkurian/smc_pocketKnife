@@ -132,11 +132,11 @@ class MainForm(npyscreen.FormWithMenus):
         setTest.add("/dev/sdz")
 
         t2 = self.add(npyscreen.BoxTitle, name="Start-Up:", max_height=len(test) + 3,
-                    scroll_exit=True)
+                      scroll_exit=True)
         t3 = self.add(npyscreen.BoxTitle, name="Current:", max_height=len(test) + 3,
-                    scroll_exit=True)
+                      scroll_exit=True)
         t4 = self.add(npyscreen.BoxTitle, name="Difference:", max_height=6,
-                    scroll_exit=True)
+                      scroll_exit=True)
 
         t2.values = test
         t3.values = t2.values
@@ -178,17 +178,17 @@ class MainForm(npyscreen.FormWithMenus):
 
 class secondForm(npyscreen.FormWithMenus):
     def create(self):
-        self.how_exited_handers[npyscreen.wgwidget.EXITED_ESCAPE]  = self.exit_application
+        self.how_exited_handers[npyscreen.wgwidget.EXITED_ESCAPE] = self.exit_application
 
         with open('drive.json') as handle:
             testJSON = json.loads(handle.read())
         test = list(testJSON.keys())
 
         drives = self.add(npyscreen.TitleMultiSelect, max_height=len(test)+2,
-                       name="Drive LEDs to configure (press x to choose)", values=test, scroll_exit=True)
+                          name="Drive LEDs to configure (press x to choose)", values=test, scroll_exit=True)
 
-        blink = self.add(npyscreen.TitleSelectOne, max_height=4, value=[1,], name="Turn the Drive LEDs on or off?",
-                    values=["On", "Off"], scroll_exit=True)
+        blink = self.add(npyscreen.TitleSelectOne, max_height=4, value=[1, ], name="Turn the Drive LEDs on or off?",
+                         values=["On", "Off"], scroll_exit=True)
 
         # The menus are created here.
         self.m1 = self.add_menu(name="Main Menu", shortcut="^M")
@@ -218,7 +218,7 @@ class secondForm(npyscreen.FormWithMenus):
 
     def on_ok(self):
         exit()
-        
+
     def change_forms1(self, *args, **keywords):
         change_to = "MAIN"
         # Tell the MyTestApp object to change forms.
@@ -232,7 +232,7 @@ class secondForm(npyscreen.FormWithMenus):
 
 class thirdForm(npyscreen.FormWithMenus):
     def create(self):
-        self.how_exited_handers[npyscreen.wgwidget.EXITED_ESCAPE]  = self.exit_application
+        self.how_exited_handers[npyscreen.wgwidget.EXITED_ESCAPE] = self.exit_application
 
         # The menus are created here.
         self.m1 = self.add_menu(name="Main Menu", shortcut="^M")
@@ -249,7 +249,7 @@ class thirdForm(npyscreen.FormWithMenus):
         self.edit()
 
     def whenDisplayText(self, argument):
-       npyscreen.notify_confirm(argument)
+        npyscreen.notify_confirm(argument)
 
     def exit_application(self):
         self.parentApp.setNextForm(None)
@@ -273,12 +273,12 @@ class thirdForm(npyscreen.FormWithMenus):
 
 
 def ledBlink(expanderID, slotID):
-    subprocess.run(["sudo","sg_ses",f"--descriptor={slotID}","--set=ident",f"{expanderID}"])
+    subprocess.run(["sudo", "sg_ses", f"--descriptor={slotID}", "--set=ident", f"{expanderID}"])
     print(f"Activated {slotID} on Expander {expanderID}")
 
 
 def ledStop(expanderID, slotID):
-    subprocess.run(["sudo","sg_ses",f"--descriptor={slotID}","--clear=ident",f"{expanderID}"])
+    subprocess.run(["sudo", "sg_ses", f"--descriptor={slotID}", "--clear=ident", f"{expanderID}"])
     print(f"Deactivated {slotID} on Expander {expanderID}")
 
 
