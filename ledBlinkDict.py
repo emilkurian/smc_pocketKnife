@@ -27,7 +27,7 @@ def getNumSlots(encList):
 
 def createSASDict(): #key: sas address, value: logical name
     subprocess.run(["sudo","./sasDict.sh"])
-    file=iter(open("/home/joshua/pocketKnife/sasDict.txt"))
+    file=iter(open("sasDict.txt"))
     for line in file:
         #print(line)
         tokens = line.split()

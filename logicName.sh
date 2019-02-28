@@ -2,6 +2,6 @@
 
 FILE1=$1
 
-sudo lsscsi -stg | grep "$FILE1" > /home/joshua/pocketKnife/dump.txt 
-sudo awk '{print $4}' /home/joshua/pocketKnife/dump.txt > logicName.txt
+sudo lsscsi -stg | grep "$FILE1" > dump.txt 
+sudo awk '{print $4}' dump.txt > logicName.txt
 rm /home/joshua/pocketKnife/dump.txt

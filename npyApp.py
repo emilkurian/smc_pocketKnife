@@ -31,7 +31,7 @@ def getNumSlots(encList):
 
 def createSASDict():  # key: sas address, value: logical name
     subprocess.run(["sudo", "./sasDict.sh"])
-    file = iter(open("/home/joshua/pocketKnife/sasDict.txt"))
+    file = iter(open("sasDict.txt"))
     for line in file:
         # print(line)
         tokens = line.split()
@@ -77,7 +77,7 @@ def createFullDict():  # key: logical name, value: infoList [encIDString, SlotSt
         else:
             drive_dict[logicName] = newinfo
     # print("Drive Dictionary")
-    # print(drive_dict) TODO: Make printout of dictionary more reader-friendly
+    # print(drive_dict) TODO Make printout of dictionary more reader-friendly
 
 
 def getSASaddr(slotList):
@@ -121,26 +121,24 @@ class MyTestApp(npyscreen.NPSAppManaged):
         self.resetHistory()
 
 
-class MainForm(npyscreen.FormWithMenus):
+class MainForm(npyscreen.ActionFormWithMenus):
     def create(self):
         self.how_exited_handers[npyscreen.wgwidget.EXITED_ESCAPE] = self.exit_application
 
-        with open('drive.json') as handle:
-            testJSON = json.loads(handle.read())
-        test = list(testJSON.keys())
-        setTest = set(testJSON.keys())
-        setTest.add("/dev/sdz")
+        drives = dict()
 
-        t2 = self.add(npyscreen.BoxTitle, name="Start-Up:", max_height=len(test) + 3,
+        for key in drive_dict:
+            drives.append(key)
+
+        t2 = self.add(npyscreen.BoxTitle, name="Start-Up:", max_height=12,
                       scroll_exit=True)
-        t3 = self.add(npyscreen.BoxTitle, name="Current:", max_height=len(test) + 3,
+        t3 = self.add(npyscreen.BoxTitle, name="Current:", max_height=12,
                       scroll_exit=True)
         t4 = self.add(npyscreen.BoxTitle, name="Difference:", max_height=6,
                       scroll_exit=True)
 
-        t2.values = test
-        t3.values = t2.values
-        t4.values = setTest.difference(set(test))
+        t2.values = drives
+        t3.values = drives
 
         # The menus are created here.
         self.m1 = self.add_menu(name="Main Menu", shortcut="^M")
@@ -158,7 +156,7 @@ class MainForm(npyscreen.FormWithMenus):
         npyscreen.notify_confirm(argument)
 
     def on_ok(self):
-        npyscreen.notify_confirm("OK Button Pressed!")
+        self.parentApp.switchForm(None)
 
     def exit_application(self):
         self.parentApp.setNextForm(None)
@@ -176,18 +174,14 @@ class MainForm(npyscreen.FormWithMenus):
         self.parentApp.change_form(change_to)
 
 
-class secondForm(npyscreen.FormWithMenus):
+class secondForm(npyscreen.ActionFormWithMenus):
     def create(self):
         self.how_exited_handers[npyscreen.wgwidget.EXITED_ESCAPE] = self.exit_application
 
-        with open('drive.json') as handle:
-            testJSON = json.loads(handle.read())
-        test = list(testJSON.keys())
+        self.drives = self.add(npyscreen.TitleMultiSelect, max_height=10,
+                          name="Drive LEDs to configure (press x to choose)", values=drive_dict, scroll_exit=True)
 
-        drives = self.add(npyscreen.TitleMultiSelect, max_height=len(test)+2,
-                          name="Drive LEDs to configure (press x to choose)", values=test, scroll_exit=True)
-
-        blink = self.add(npyscreen.TitleSelectOne, max_height=4, value=[1, ], name="Turn the Drive LEDs on or off?",
+        self.blink = self.add(npyscreen.TitleSelectOne, max_height=4, name="Turn the Drive LEDs on or off?",
                          values=["On", "Off"], scroll_exit=True)
 
         # The menus are created here.
@@ -202,12 +196,6 @@ class secondForm(npyscreen.FormWithMenus):
             ("Instructions", self.change_forms2),
             ])
 
-        key_of_choice = 'Return'
-        what_to_display = 'Press {} for popup'.format(key_of_choice)
-
-        self.add_handlers({key_of_choice: self.spawn_notify_popup})
-        self.add(npyscreen.FixedText, value=what_to_display)
-
     def whenDisplayText(self, argument):
         npyscreen.notify_confirm(argument)
 
@@ -217,7 +205,37 @@ class secondForm(npyscreen.FormWithMenus):
         self.parentApp.switchFormNow()
 
     def on_ok(self):
-        exit()
+        string = str(self.blink)
+        npyscreen.notify_wait("You Selected " + string)
+        if self.blink == "On":
+            for i in self.drives:
+                infoList = drive_dict.get(i)
+                # print(infoList)
+                if infoList is None:  # input device not a key in dictionary
+                    print("Error: ", i, "device name not found.")
+                elif i == 'Empty' or i == 'NoName':  # Edge Cases
+                    # print("Empty or No Name cases: ", i, infoList)
+                    for item in infoList:
+                        ledBlink(item[0], item[1])
+                else:  # all other standard logical names
+                    # print("Standard Logical Name Case")
+                    ledBlink(infoList[0], infoList[1])
+        elif self.blink == 'Off':  # print("Turn LEDs Off")
+            # print(blinkInput)
+            for i in self.drives:
+                infoList = drive_dict.get(i)
+            # print(infoList)
+                if infoList is None:  # input device not a key in dictionary
+                    print("Error: ", i, "device name not found.")
+                elif i == 'Empty' or i == 'NoName':  # Edge Cases
+                    # print("Empty or No Name cases: ", i, infoList)
+                    for item in infoList:
+                        ledStop(item[0], item[1])
+                else:  # all other standard logical names
+                    # print("Standard Logical Name Case")
+                    ledStop(infoList[0], infoList[1])
+        else:
+            npyscreen.notify_wait("Only On or Off as a Parameter!")
 
     def change_forms1(self, *args, **keywords):
         change_to = "MAIN"
@@ -230,9 +248,13 @@ class secondForm(npyscreen.FormWithMenus):
         self.parentApp.change_form(change_to)
 
 
-class thirdForm(npyscreen.FormWithMenus):
+class thirdForm(npyscreen.ActionFormWithMenus):
     def create(self):
         self.how_exited_handers[npyscreen.wgwidget.EXITED_ESCAPE] = self.exit_application
+
+        self.add(npyscreen.FixedText, value="This Program  is designed to locate and blink LEDs for storage drives in a server")
+        self.add(npyscreen.FixedText, value="Drive Comparison: Will list drives found on start up versus drives currenly found")
+        self.add(npyscreen.FixedText, value="LED Blink: Will blink or unblink drives")
 
         # The menus are created here.
         self.m1 = self.add_menu(name="Main Menu", shortcut="^M")
@@ -257,9 +279,7 @@ class thirdForm(npyscreen.FormWithMenus):
         self.parentApp.switchFormNow()
 
     def on_ok(self):
-        # Exit the application if the OK button is pressed.
-        npyscreen.notify_wait("Goodbye!")
-        self.parentApp.switchForm(None)
+        self.change_forms2
 
     def change_forms1(self, *args, **keywords):
         change_to = "BLINK"
@@ -288,4 +308,6 @@ def main():
 
 
 if __name__ == '__main__':
+    createSASDict()
+    createFullDict()
     main()
