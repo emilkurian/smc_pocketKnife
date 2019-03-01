@@ -125,7 +125,7 @@ class MainForm(npyscreen.ActionFormWithMenus):
     def create(self):
         self.how_exited_handers[npyscreen.wgwidget.EXITED_ESCAPE] = self.exit_application
 
-        drives = dict()
+        drives = list()
 
         for key in drive_dict:
             drives.append(key)
@@ -176,10 +176,14 @@ class MainForm(npyscreen.ActionFormWithMenus):
 
 class secondForm(npyscreen.ActionFormWithMenus):
     def create(self):
-        self.how_exited_handers[npyscreen.wgwidget.EXITED_ESCAPE] = self.exit_application
+        
+        drive = list()
+
+        for key in drive_dict:
+            drive.append(key)
 
         self.drives = self.add(npyscreen.TitleMultiSelect, max_height=10,
-                          name="Drive LEDs to configure (press x to choose)", values=drive_dict, scroll_exit=True)
+                          name="Drive LEDs to configure (press x to choose)", values=drive, scroll_exit=True)
 
         self.blink = self.add(npyscreen.TitleSelectOne, max_height=4, name="Turn the Drive LEDs on or off?",
                          values=["On", "Off"], scroll_exit=True)
