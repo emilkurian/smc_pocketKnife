@@ -176,11 +176,11 @@ class MainForm(npyscreen.ActionFormWithMenus):
 
 class secondForm(npyscreen.ActionFormWithMenus):
     def create(self):
-        
+
         drive = list()
 
         for key in drive_dict:
-            drive.append(key)
+            drive.append(str(key))
 
         self.drives = self.add(npyscreen.TitleMultiSelect, max_height=10,
                           name="Drive LEDs to configure (press x to choose)", values=drive, scroll_exit=True)
@@ -209,10 +209,12 @@ class secondForm(npyscreen.ActionFormWithMenus):
         self.parentApp.switchFormNow()
 
     def on_ok(self):
-        string = str(self.blink)
-        npyscreen.notify_wait("You Selected " + string)
-        if self.blink == "On":
-            for i in self.drives:
+        passDrives = self.drives.get_selected_objects()
+        passBlink = self.blink.get_selected_objects()
+        npyscreen.notify_wait("You Selected " + str(passBlink))
+        npyscreen.notify_wait("You Selected " + str(passDrives))
+        if str(passBlink) == "['On']":
+            for i in passDrives:
                 infoList = drive_dict.get(i)
                 # print(infoList)
                 if infoList is None:  # input device not a key in dictionary
@@ -224,9 +226,9 @@ class secondForm(npyscreen.ActionFormWithMenus):
                 else:  # all other standard logical names
                     # print("Standard Logical Name Case")
                     ledBlink(infoList[0], infoList[1])
-        elif self.blink == 'Off':  # print("Turn LEDs Off")
+        elif str(passBlink) == "['Off']":  # print("Turn LEDs Off")
             # print(blinkInput)
-            for i in self.drives:
+            for i in passDrives:
                 infoList = drive_dict.get(i)
             # print(infoList)
                 if infoList is None:  # input device not a key in dictionary
@@ -254,7 +256,6 @@ class secondForm(npyscreen.ActionFormWithMenus):
 
 class thirdForm(npyscreen.ActionFormWithMenus):
     def create(self):
-        self.how_exited_handers[npyscreen.wgwidget.EXITED_ESCAPE] = self.exit_application
 
         self.add(npyscreen.FixedText, value="This Program  is designed to locate and blink LEDs for storage drives in a server")
         self.add(npyscreen.FixedText, value="Drive Comparison: Will list drives found on start up versus drives currenly found")
