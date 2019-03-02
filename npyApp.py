@@ -4,9 +4,11 @@
 import npyscreen
 import subprocess
 import json
+import argparse
 
 drive_dict = dict()
 sas_dict = dict()
+startUp_dict = dict()
 
 
 def getEncl():
@@ -97,22 +99,12 @@ def getSASaddr(slotList):
     # return sasAddr #return as string instead of as SASAddress appended to end of List
 
 
-def driveDump(testDict):
-    with open('test.json', 'w') as file:
-        file.write(json.dumps(testDict))
-
-
-def driveRead():
-    with open('test.json') as handle:
-        return json.loads(handle.read())
-
-
 class MyTestApp(npyscreen.NPSAppManaged):
     def onStart(self):
         self.addForm("MAIN", MainForm, name="Drive Comparison", color="IMPORTANT")
         self.addForm("BLINK", secondForm, name="Drive LED Configuration", color="IMPORTANT")
         self.addForm("INSTRUCTIONS", thirdForm, name="Instructions", color="IMPORTANT")
-
+        self.addForm("STARTBLINK",fourthForm,"Start Up LED Configuration", color="IMPORTANT")
     def onCleanExit(self):
         npyscreen.notify_wait("Goodbye!")
 
@@ -126,9 +118,13 @@ class MainForm(npyscreen.ActionFormWithMenus):
         self.how_exited_handers[npyscreen.wgwidget.EXITED_ESCAPE] = self.exit_application
 
         drives = list()
+        startUp = list()
 
         for key in drive_dict:
             drives.append(key)
+
+        for key in startUp_dict:
+            startUp.append(key)
 
         t2 = self.add(npyscreen.BoxTitle, name="Start-Up:", max_height=12,
                       scroll_exit=True)
@@ -137,8 +133,9 @@ class MainForm(npyscreen.ActionFormWithMenus):
         t4 = self.add(npyscreen.BoxTitle, name="Difference:", max_height=6,
                       scroll_exit=True)
 
-        t2.values = drives
+        t2.values = startUp
         t3.values = drives
+        t4.values = list(set(startUp).difference(set(drives)))
 
         # The menus are created here.
         self.m1 = self.add_menu(name="Main Menu", shortcut="^M")
@@ -191,7 +188,8 @@ class secondForm(npyscreen.ActionFormWithMenus):
         # The menus are created here.
         self.m1 = self.add_menu(name="Main Menu", shortcut="^M")
         self.m1.addItemsFromList([
-            ("Exit Application", self.exit_application)
+            ("Exit Application", self.exit_application),
+            ("Use Start Up Drive List", self.change_forms3)
         ])
 
         self.m2 = self.add_menu(name="Tools", shortcut="b",)
@@ -208,11 +206,9 @@ class secondForm(npyscreen.ActionFormWithMenus):
         self.editing = False
         self.parentApp.switchFormNow()
 
-    def on_ok(self):
+    def on_ok(self, drive_dict):
         passDrives = self.drives.get_selected_objects()
         passBlink = self.blink.get_selected_objects()
-        npyscreen.notify_wait("You Selected " + str(passBlink))
-        npyscreen.notify_wait("You Selected " + str(passDrives))
         if str(passBlink) == "['On']":
             for i in passDrives:
                 infoList = drive_dict.get(i)
@@ -226,6 +222,7 @@ class secondForm(npyscreen.ActionFormWithMenus):
                 else:  # all other standard logical names
                     # print("Standard Logical Name Case")
                     ledBlink(infoList[0], infoList[1])
+
         elif str(passBlink) == "['Off']":  # print("Turn LEDs Off")
             # print(blinkInput)
             for i in passDrives:
@@ -243,6 +240,8 @@ class secondForm(npyscreen.ActionFormWithMenus):
         else:
             npyscreen.notify_wait("Only On or Off as a Parameter!")
 
+        npyscreen.notify_confirm("You turned " + str(passDrives) + str(passBlink))
+
     def change_forms1(self, *args, **keywords):
         change_to = "MAIN"
         # Tell the MyTestApp object to change forms.
@@ -250,6 +249,11 @@ class secondForm(npyscreen.ActionFormWithMenus):
 
     def change_forms2(self, *args, **keywords):
         change_to = "INSTRUCTIONS"
+        # Tell the MyTestApp object to change forms.
+        self.parentApp.change_form(change_to)
+
+    def change_forms3(self, *args, **keywords):
+        change_to = "STARTBLINK"
         # Tell the MyTestApp object to change forms.
         self.parentApp.change_form(change_to)
 
@@ -284,7 +288,7 @@ class thirdForm(npyscreen.ActionFormWithMenus):
         self.parentApp.switchFormNow()
 
     def on_ok(self):
-        self.change_forms2
+        npyscreen.notify_confirm("Use ^X to go explore!")
 
     def change_forms1(self, *args, **keywords):
         change_to = "BLINK"
@@ -293,6 +297,93 @@ class thirdForm(npyscreen.ActionFormWithMenus):
 
     def change_forms2(self, *args, **keywords):
         change_to = "MAIN"
+        # Tell the MyTestApp object to change forms.
+        self.parentApp.change_form(change_to)
+
+
+class fourthForm(npyscreen.ActionFormWithMenus):
+    def create(self):
+
+        drive = list()
+
+        for key in startUp_dict:
+            drive.append(str(key))
+
+        self.drives = self.add(npyscreen.TitleMultiSelect, max_height=10,
+                          name="Drive LEDs to configure (press x to choose)", values=drive, scroll_exit=True)
+
+        self.blink = self.add(npyscreen.TitleSelectOne, max_height=4, name="Turn the Drive LEDs on or off?",
+                         values=["On", "Off"], scroll_exit=True)
+
+        # The menus are created here.
+        self.m1 = self.add_menu(name="Main Menu", shortcut="^M")
+        self.m1.addItemsFromList([
+            ("Exit Application", self.exit_application),
+            ("Use Current Drive List", self.change_forms3)
+        ])
+
+        self.m2 = self.add_menu(name="Tools", shortcut="b",)
+        self.m2.addItemsFromList([
+            ("Compare", self.change_forms1),
+            ("Instructions", self.change_forms2),
+            ])
+
+
+    def whenDisplayText(self, argument):
+        npyscreen.notify_confirm(argument)
+
+    def exit_application(self):
+        self.parentApp.setNextForm(None)
+        self.editing = False
+        self.parentApp.switchFormNow()
+
+    def on_ok(self):
+        passDrives = self.drives.get_selected_objects()
+        passBlink = self.blink.get_selected_objects()
+        if str(passBlink) == "['On']":
+            for i in passDrives:
+                infoList = startUp_dict.get(i)
+                # print(infoList)
+                if infoList is None:  # input device not a key in dictionary
+                    print("Error: ", i, "device name not found.")
+                elif i == 'Empty' or i == 'NoName':  # Edge Cases
+                    # print("Empty or No Name cases: ", i, infoList)
+                    for item in infoList:
+                        ledBlink(item[0], item[1])
+                else:  # all other standard logical names
+                    # print("Standard Logical Name Case")
+                    ledBlink(infoList[0], infoList[1])
+        elif str(passBlink) == "['Off']":  # print("Turn LEDs Off")
+            # print(blinkInput)
+            for i in passDrives:
+                infoList = startUp_dict.get(i)
+            # print(infoList)
+                if infoList is None:  # input device not a key in dictionary
+                    print("Error: ", i, "device name not found.")
+                elif i == 'Empty' or i == 'NoName':  # Edge Cases
+                    # print("Empty or No Name cases: ", i, infoList)
+                    for item in infoList:
+                        ledStop(item[0], item[1])
+                else:  # all other standard logical names
+                    # print("Standard Logical Name Case")
+                    ledStop(infoList[0], infoList[1])
+        else:
+            npyscreen.notify_wait("Only On or Off as a Parameter!")
+
+        npyscreen.notify_confirm("You turned " + str(passDrives) + str(passBlink))
+
+    def change_forms1(self, *args, **keywords):
+        change_to = "MAIN"
+        # Tell the MyTestApp object to change forms.
+        self.parentApp.change_form(change_to)
+
+    def change_forms2(self, *args, **keywords):
+        change_to = "INSTRUCTIONS"
+        # Tell the MyTestApp object to change forms.
+        self.parentApp.change_form(change_to)
+
+    def change_forms3(self, *args, **keywords):
+        change_to = "BLINK"
         # Tell the MyTestApp object to change forms.
         self.parentApp.change_form(change_to)
 
@@ -312,7 +403,33 @@ def main():
     TA.run()
 
 
+def driveDump(testDict):
+    with open('startUpDrive.json', 'w') as file:
+        file.write(json.dumps(testDict))
+
+
+def driveRead():
+    with open('startUpDrive.json') as handle:
+        return json.loads(handle.read())
+
+
 if __name__ == '__main__':
+
+    test = "Test program for Arguments"
+
+    parser = argparse.ArgumentParser(description=test)
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("-S", "--store", help="store drive info", action="store_true")
+    args = parser.parse_args()
+
+    if args.store:
+        createSASDict()
+        createFullDict()
+        driveDump(drive_dict)
+        exit()
+    else:
+        startUp_dict = driveRead()
+
     createSASDict()
     createFullDict()
     main()
