@@ -5,10 +5,12 @@ import npyscreen
 import subprocess
 import json
 import argparse
+import os
 
 drive_dict = dict()
 sas_dict = dict()
 startUp_dict = dict()
+
 
 
 def getEncl():
@@ -85,18 +87,20 @@ def createFullDict():  # key: logical name, value: infoList [encIDString, SlotSt
 def getSASaddr(slotList):
     for tup in slotList:
         subprocess.run(["sudo", "./sasAddr.sh", f"{tup[0]}", f"{tup[1]}"])
+        # print(tup)
+        if (os.stat("sasAddr.txt").st_size == 0):
+            tup.append('0x0')
         for sasAddr in open("sasAddr.txt"):
-            # print("getSASfunction: ",sasAddr)
+            # print("getSASfunction: ", sasAddr)
             tup.append(sasAddr.strip('\n'))
             # print(tup)
-            # subprocess.run(["sudo","./logicName.sh",f"{sasAddr}"])
+            # subprocess.run(["sudo", "./logicName.sh", f"{sasAddr}"])
             # for name in open("logicName.txt"):
-            #    subprocess.run(["sudo","cat","logicName.txt"])
-            #    #print(name)
-            #    tup.append(name)
-            #    #print(tup)
+            #     subprocess.run(["sudo", "cat", "logicName.txt"])
+            #     print(name)
+            #     tup.append(name)
+            #     print(tup)
     return slotList
-    # return sasAddr #return as string instead of as SASAddress appended to end of List
 
 
 class MyTestApp(npyscreen.NPSAppManaged):
@@ -206,7 +210,7 @@ class secondForm(npyscreen.ActionFormWithMenus):
         self.editing = False
         self.parentApp.switchFormNow()
 
-    def on_ok(self, drive_dict):
+    def on_ok(self):
         passDrives = self.drives.get_selected_objects()
         passBlink = self.blink.get_selected_objects()
         if str(passBlink) == "['On']":
