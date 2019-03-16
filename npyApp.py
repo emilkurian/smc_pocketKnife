@@ -12,7 +12,6 @@ sas_dict = dict()
 startUp_dict = dict()
 
 
-
 def getEncl():
     encsList = list()
     subprocess.run(["sudo", "./encList.sh"])
@@ -25,11 +24,10 @@ def getEncl():
 def getNumSlots(encList):
     slotList = list()
     for enc in encList:
-        subprocess.run(["sudo", "./slotsList.sh", f"{enc}"])
-        for slotString in open("slots.txt"):
-            tup = [enc, slotString.strip('\n')]
+        output = subprocess.Popen([f"sudo sg_ses --page=ED {enc} | grep Slot| awk '{{print $4}}'"], shell=True, stdout=subprocess.PIPE).stdout
+        for i in output.read().splitlines():
+            tup = [enc, i.decode('utf-8')]
             slotList.append(tup)
-
     return slotList
 
 
@@ -108,8 +106,12 @@ class MyTestApp(npyscreen.NPSAppManaged):
         self.addForm("MAIN", MainForm, name="Drive Comparison", color="IMPORTANT")
         self.addForm("BLINK", secondForm, name="Drive LED Configuration", color="IMPORTANT")
         self.addForm("INSTRUCTIONS", thirdForm, name="Instructions", color="IMPORTANT")
-        self.addForm("STARTBLINK",fourthForm,"Start Up LED Configuration", color="IMPORTANT")
+        self.addForm("STARTBLINK", fourthForm,"Start Up LED Configuration", color="IMPORTANT")
+
     def onCleanExit(self):
+        for key in drive_dict:
+            infoList = drivedict.get(key)
+            ledStop(infoList[0], infoList[1])
         npyscreen.notify_wait("Goodbye!")
 
     def change_form(self, name):
@@ -332,7 +334,6 @@ class fourthForm(npyscreen.ActionFormWithMenus):
             ("Instructions", self.change_forms2),
             ])
 
-
     def whenDisplayText(self, argument):
         npyscreen.notify_confirm(argument)
 
@@ -394,12 +395,10 @@ class fourthForm(npyscreen.ActionFormWithMenus):
 
 def ledBlink(expanderID, slotID):
     subprocess.run(["sudo", "sg_ses", f"--descriptor={slotID}", "--set=ident", f"{expanderID}"])
-    print(f"Activated {slotID} on Expander {expanderID}")
 
 
 def ledStop(expanderID, slotID):
     subprocess.run(["sudo", "sg_ses", f"--descriptor={slotID}", "--clear=ident", f"{expanderID}"])
-    print(f"Deactivated {slotID} on Expander {expanderID}")
 
 
 def main():
