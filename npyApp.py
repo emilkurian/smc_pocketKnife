@@ -105,8 +105,10 @@ class MyTestApp(npyscreen.NPSAppManaged):
         self.addForm("BLINK", secondForm, name="Drive LED Configuration", color="IMPORTANT")
         self.addForm("INSTRUCTIONS", thirdForm, name="Instructions", color="IMPORTANT")
         self.addForm("STARTBLINK",fourthForm,"Start Up LED Configuration", color="IMPORTANT")
+
     def onCleanExit(self):
         npyscreen.notify_wait("Goodbye!")
+	subprocess.run(["sudo", "rm", "*.txt"])
 
     def change_form(self, name):
         self.switchForm(name)
