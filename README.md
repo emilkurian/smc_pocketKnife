@@ -4,6 +4,11 @@ AJ&#39;s PocketKnife
 
 Designed to turn on Drive LEDs on Failure for SSG systems.
 
+Python 3.6.7
+lsscsi 0.28
+sg_ses 2.43
+npyscreen 4.10.5
+
 1) Set up StartUp script to document HDD on Expanders for Topload Systems
     - create command line argument for HDD documentation, then add script to init.d 
 2) Create a Trigger to Initiate LED notification for User (Python)
@@ -22,8 +27,8 @@ To Do:
 
 1) GUI
     - makes app User Friendly
-    - AJ's Recommendation: NCurses (can be used with SSH?)
+    - AJ's Recommendation: NCurses (can be used with SSH?) (completed with npyscreen)
 2) Multiple systems
-    - Based on Expanders, figure out and Map Systems + JBODs Seperately
+    - Based on Expanders, figure out and Map Systems + JBODs Seperately (multiple expanders tested)
 3) Solutions Specific
     - Do mapping for Ceph/Lustre, so OSD names can be used.
