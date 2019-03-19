@@ -110,8 +110,9 @@ class MyTestApp(npyscreen.NPSAppManaged):
 
     def onCleanExit(self):
         for key in drive_dict:
-            infoList = drivedict.get(key)
+            infoList = drive_dict.get(key)
             ledStop(infoList[0], infoList[1])
+        subprocess.run(["sudo", "rm", "*.txt"])
         npyscreen.notify_wait("Goodbye!")
 
     def change_form(self, name):
@@ -146,7 +147,7 @@ class MainForm(npyscreen.ActionFormWithMenus):
         # The menus are created here.
         self.m1 = self.add_menu(name="Main Menu", shortcut="^M")
         self.m1.addItemsFromList([
-            ("Exit Application", self.exit_application, "Ã©"),
+            ("Exit Application", self.exit_application, "é"),
             ])
 
         self.m2 = self.add_menu(name="Tools", shortcut="b",)
