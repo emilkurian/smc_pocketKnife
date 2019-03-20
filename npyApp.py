@@ -108,7 +108,7 @@ class MyTestApp(npyscreen.NPSAppManaged):
 
     def onCleanExit(self):
         npyscreen.notify_wait("Goodbye!")
-	subprocess.run(["sudo", "rm", "*.txt"])
+	    subprocess.run(["sudo", "rm", "*.txt"])
 
     def change_form(self, name):
         self.switchForm(name)
@@ -142,7 +142,7 @@ class MainForm(npyscreen.ActionFormWithMenus):
         # The menus are created here.
         self.m1 = self.add_menu(name="Main Menu", shortcut="^M")
         self.m1.addItemsFromList([
-            ("Exit Application", self.exit_application, "Ã©"),
+            ("Exit Application", self.exit_application, "é"),
             ])
 
         self.m2 = self.add_menu(name="Tools", shortcut="b",)
