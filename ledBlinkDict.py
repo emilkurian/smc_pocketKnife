@@ -5,68 +5,49 @@ import os
 
 drive_dict = dict()
 sas_dict = dict()
+startUp_dict = dict()
 
 
 def getEncl():
     encsList = list()
-    subprocess.run(["sudo", "./encList.sh"])
-    for encString in open("exp.txt"):
+    output = subprocess.Popen(["lsscsi -g -t | grep encl | awk '{print $5}'"], shell=True, stdout=subprocess.PIPE).stdout
+    for i in output.read().splitlines():
+        encString = i.decode('utf-8')
         encsList.append(encString.strip('\n'))
-    with open('encList.json', 'w') as file:
-        file.write(json.dumps(encsList))
     return encsList
 
 
 def getNumSlots(encList):
     slotList = list()
     for enc in encList:
-        subprocess.run(["sudo", "./slotsList.sh", f"{enc}"])
-        for slotString in open("slots.txt"):
-            tup = [enc, slotString.strip('\n')]
-            slotList.append(tup)
-    seen = set()
-    unique = []
-    for x in slotList:
-        sort = tuple(sorted(x))
-        if sort not in seen:
-            unique.append(x)
-            seen.add(sort)
-    with open('slotDump.json', 'w') as file:
-        file.write(json.dumps(unique))
-    return unique
+        output = subprocess.Popen([f"sudo sg_ses --page=ED {enc} | grep Slot| awk '{{print $4}}'"], shell=True, stdout=subprocess.PIPE).stdout
+        for i in output.read().splitlines():
+            tup = [enc, i.decode('utf-8')]
+            if tup not in slotList:
+                slotList.append(tup)
+    return slotList
 
 
 def createSASDict():  # key: sas address, value: logical name
-    subprocess.run(["sudo", "./sasDict.sh"])
-    file = iter(open("sasDict.txt"))
-    for line in file:
-        # print(line)
-        tokens = line.split()
-        # print(tokens)
+    output = subprocess.Popen(["lsscsi -t | grep sas | grep disk | awk '{{print $3," "$4}}' | sed 's/^....//'"], shell=True, stdout=subprocess.PIPE).stdout
+    for line in output.read().splitlines():
+        tup = line.decode('utf-8')
+        tokens = tup.split()
         value = tokens.pop().strip()
         key = tokens.pop().strip()
-        # print(key,value)
         sas_dict[key] = value
-    with open('sasDict.json', 'w') as file:
-        file.write(json.dumps(sas_dict))
-    # print("SAS Dictionary")
-    # print(sas_dict)
 
 
 def createFullDict():  # key: logical name, value: infoList [encIDString, SlotString, sas address, other info if needed]
     encList = getEncl()
     numList = getNumSlots(encList)
-    with open('numList.json', 'w') as file:
-        file.write(json.dumps(numList))
+    # print(numList)
     infoList = getSASaddr(numList)
-    with open('infoList.json', 'w') as file:
-        file.write(json.dumps(infoList))
-    print(infoList)
     for i in infoList:
         logicName = sas_dict.get(i[2])
         newinfo = i
         sasAddr = i[2]
-        # print("newinfo: ", i, "sasAddr: ", i[2])
+        # print("newinfo: ",i,"sasAddr: ",i[2])
         if sasAddr == '0x0':  # Case: SAS Address missing = empty slot
             # print("empty slot found:",i)
             logicName = 'Empty'
@@ -90,29 +71,18 @@ def createFullDict():  # key: logical name, value: infoList [encIDString, SlotSt
         else:
             drive_dict[logicName] = newinfo
     # print("Drive Dictionary")
-    # print(drive_dict)  # TODO Make printout of dictionary more reader-friendly
+    # print(drive_dict) TODO Make printout of dictionary more reader-friendly
 
 
 def getSASaddr(slotList):
     for tup in slotList:
-        subprocess.run(["sudo", "./sasAddr.sh", f"{tup[0]}", f"{tup[1]}"])
-        # print(tup)
-        if (os.stat("sasAddr.txt").st_size == 0):
+        output = subprocess.Popen([f"sudo sg_ses --descriptor={tup[1]} {tup[0]} | grep 'SAS address' | sed '1d' | awk '{{print $3}}'"], shell=True, stdout=subprocess.PIPE).stdout
+        address = output.read().decode('utf-8')
+        if address == "":
             tup.append('0x0')
-        for sasAddr in open("sasAddr.txt"):
-            # print("getSASfunction: ", sasAddr)
-            tup.append(sasAddr.strip('\n'))
-            # print(tup)
-            # subprocess.run(["sudo", "./logicName.sh", f"{sasAddr}"])
-            # for name in open("logicName.txt"):
-            #     subprocess.run(["sudo", "cat", "logicName.txt"])
-            #     print(name)
-            #     tup.append(name)
-            #     print(tup)
-    with open('slots.json', 'w') as file:
-        file.write(json.dumps(slotList))
+        else:
+            tup.append(address.strip('\n'))
     return slotList
-    # return sasAddr #return as string instead of as SASAddress appended to end of List
 
 
 def driveDump(testDict):

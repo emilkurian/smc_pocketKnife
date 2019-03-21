@@ -14,10 +14,10 @@ startUp_dict = dict()
 
 def getEncl():
     encsList = list()
-    subprocess.run(["sudo", "./encList.sh"])
-    for encString in open("exp.txt"):
+    output = subprocess.Popen(["lsscsi -g -t | grep encl | awk '{print $5}'"], shell=True, stdout=subprocess.PIPE).stdout
+    for i in output.read().splitlines():
+        encString = i.decode('utf-8')
         encsList.append(encString.strip('\n'))
-
     return encsList
 
 
@@ -27,23 +27,19 @@ def getNumSlots(encList):
         output = subprocess.Popen([f"sudo sg_ses --page=ED {enc} | grep Slot| awk '{{print $4}}'"], shell=True, stdout=subprocess.PIPE).stdout
         for i in output.read().splitlines():
             tup = [enc, i.decode('utf-8')]
-            slotList.append(tup)
+            if tup not in slotList:
+                slotList.append(tup)
     return slotList
 
 
 def createSASDict():  # key: sas address, value: logical name
-    subprocess.run(["sudo", "./sasDict.sh"])
-    file = iter(open("sasDict.txt"))
-    for line in file:
-        # print(line)
-        tokens = line.split()
-        # print(tokens)
+    output = subprocess.Popen(["lsscsi -t | grep sas | grep disk | awk '{{print $3," "$4}}' | sed 's/^....//'"], shell=True, stdout=subprocess.PIPE).stdout
+    for line in output.read().splitlines():
+        tup = line.decode('utf-8')
+        tokens = tup.split()
         value = tokens.pop().strip()
         key = tokens.pop().strip()
-        # print(key,value)
         sas_dict[key] = value
-    # print("SAS Dictionary")
-    # print(sas_dict)
 
 
 def createFullDict():  # key: logical name, value: infoList [encIDString, SlotString, sas address, other info if needed]
@@ -84,33 +80,25 @@ def createFullDict():  # key: logical name, value: infoList [encIDString, SlotSt
 
 def getSASaddr(slotList):
     for tup in slotList:
-        subprocess.run(["sudo", "./sasAddr.sh", f"{tup[0]}", f"{tup[1]}"])
-        # print(tup)
-        if (os.stat("sasAddr.txt").st_size == 0):
+        output = subprocess.Popen([f"sudo sg_ses --descriptor={tup[1]} {tup[0]} | grep 'SAS address' | sed '1d' | awk '{{print $3}}'"], shell=True, stdout=subprocess.PIPE).stdout
+        address = output.read().decode('utf-8')
+        if address == "":
             tup.append('0x0')
-        for sasAddr in open("sasAddr.txt"):
-            # print("getSASfunction: ", sasAddr)
-            tup.append(sasAddr.strip('\n'))
-            # print(tup)
-            # subprocess.run(["sudo", "./logicName.sh", f"{sasAddr}"])
-            # for name in open("logicName.txt"):
-            #     subprocess.run(["sudo", "cat", "logicName.txt"])
-            #     print(name)
-            #     tup.append(name)
-            #     print(tup)
+        else:
+            tup.append(address.strip('\n'))
     return slotList
 
 
 class MyTestApp(npyscreen.NPSAppManaged):
     def onStart(self):
-        self.addForm("MAIN", MainForm, name="Drive Comparison", color="IMPORTANT")
+        self.addForm("MAIN", MainForm, name="Instructions", color="IMPORTANT")
         self.addForm("BLINK", secondForm, name="Drive LED Configuration", color="IMPORTANT")
-        self.addForm("INSTRUCTIONS", thirdForm, name="Instructions", color="IMPORTANT")
+        self.addForm("COMPARISON", thirdForm, name="Drive Comparison", color="IMPORTANT")
         self.addForm("STARTBLINK", fourthForm,"Start Up LED Configuration", color="IMPORTANT")
 
     def onCleanExit(self):
         for key in drive_dict:
-            infoList = drivedict.get(key)
+            infoList = drive_dict.get(key)
             ledStop(infoList[0], infoList[1])
         npyscreen.notify_wait("Goodbye!")
 
@@ -121,50 +109,35 @@ class MyTestApp(npyscreen.NPSAppManaged):
 
 class MainForm(npyscreen.ActionFormWithMenus):
     def create(self):
-        self.how_exited_handers[npyscreen.wgwidget.EXITED_ESCAPE] = self.exit_application
 
-        drives = list()
-        startUp = list()
-
-        for key in drive_dict:
-            drives.append(key)
-
-        for key in startUp_dict:
-            startUp.append(key)
-
-        t2 = self.add(npyscreen.BoxTitle, name="Start-Up:", max_height=12,
-                      scroll_exit=True)
-        t3 = self.add(npyscreen.BoxTitle, name="Current:", max_height=12,
-                      scroll_exit=True)
-        t4 = self.add(npyscreen.BoxTitle, name="Difference:", max_height=6,
-                      scroll_exit=True)
-
-        t2.values = startUp
-        t3.values = drives
-        t4.values = list(set(startUp).difference(set(drives)))
+        self.add(npyscreen.FixedText, value="This Program  is designed to locate and blink LEDs for storage drives")
+        self.add(npyscreen.FixedText, value="Drive Comparison:")
+        self.add(npyscreen.FixedText, value="Will list drives found on start up versus drives currently found")
+        self.add(npyscreen.FixedText, value="LED Blink:")
+        self.add(npyscreen.FixedText, value="Will blink or unblink drives")
 
         # The menus are created here.
         self.m1 = self.add_menu(name="Main Menu", shortcut="^M")
         self.m1.addItemsFromList([
-            ("Exit Application", self.exit_application, "é"),
-            ])
+            ("Exit Application", self.exit_application)
+        ])
 
         self.m2 = self.add_menu(name="Tools", shortcut="b",)
         self.m2.addItemsFromList([
-            ("Blink/Unblink LED", self.change_forms1),
-            ("Instructions", self.change_forms2)
+            ("Blink/Unblink ", self.change_forms1),
+            ("Compare", self.change_forms2)
             ])
 
     def whenDisplayText(self, argument):
         npyscreen.notify_confirm(argument)
 
-    def on_ok(self):
-        self.parentApp.switchForm(None)
-
     def exit_application(self):
         self.parentApp.setNextForm(None)
         self.editing = False
         self.parentApp.switchFormNow()
+
+    def on_ok(self):
+        npyscreen.notify_confirm("Use ^X to go explore!")
 
     def change_forms1(self, *args, **keywords):
         change_to = "BLINK"
@@ -172,7 +145,7 @@ class MainForm(npyscreen.ActionFormWithMenus):
         self.parentApp.change_form(change_to)
 
     def change_forms2(self, *args, **keywords):
-        change_to = "INSTRUCTIONS"
+        change_to = "COMPARISON"
         # Tell the MyTestApp object to change forms.
         self.parentApp.change_form(change_to)
 
@@ -248,13 +221,13 @@ class secondForm(npyscreen.ActionFormWithMenus):
 
         npyscreen.notify_confirm("You turned " + str(passDrives) + str(passBlink))
 
-    def change_forms1(self, *args, **keywords):
+    def change_forms2(self, *args, **keywords):
         change_to = "MAIN"
         # Tell the MyTestApp object to change forms.
         self.parentApp.change_form(change_to)
 
-    def change_forms2(self, *args, **keywords):
-        change_to = "INSTRUCTIONS"
+    def change_forms1(self, *args, **keywords):
+        change_to = "COMPARISON"
         # Tell the MyTestApp object to change forms.
         self.parentApp.change_form(change_to)
 
@@ -267,34 +240,48 @@ class secondForm(npyscreen.ActionFormWithMenus):
 class thirdForm(npyscreen.ActionFormWithMenus):
     def create(self):
 
-        self.add(npyscreen.FixedText, value="This Program  is designed to locate and blink LEDs for storage drives in a server")
-        self.add(npyscreen.FixedText, value="Drive Comparison: Will list drives found on start up versus drives currenly found")
-        self.add(npyscreen.FixedText, value="LED Blink: Will blink or unblink drives")
+        drives = list()
+        startUp = list()
+
+        for key in drive_dict:
+            drives.append(key)
+
+        for key in startUp_dict:
+            startUp.append(key)
+
+        t2 = self.add(npyscreen.BoxTitle, name="Start-Up:", max_height=12,
+                      scroll_exit=True)
+        t3 = self.add(npyscreen.BoxTitle, name="Current:", max_height=12,
+                      scroll_exit=True)
+        t4 = self.add(npyscreen.BoxTitle, name="Difference:", max_height=6,
+                      scroll_exit=True)
+
+        t2.values = startUp
+        t3.values = drives
+        t4.values = list(set(startUp).difference(set(drives)))
 
         # The menus are created here.
         self.m1 = self.add_menu(name="Main Menu", shortcut="^M")
         self.m1.addItemsFromList([
-            ("Exit Application", self.exit_application)
-        ])
+            ("Exit Application", self.exit_application, "é"),
+            ("Instructions", self.change_forms2)
+            ])
 
         self.m2 = self.add_menu(name="Tools", shortcut="b",)
         self.m2.addItemsFromList([
-            ("Blink/Unblink ", self.change_forms1),
-            ("Compare", self.change_forms2)
+            ("Blink/Unblink LED", self.change_forms1)
             ])
-
-        self.edit()
 
     def whenDisplayText(self, argument):
         npyscreen.notify_confirm(argument)
+
+    def on_ok(self):
+        self.parentApp.switchForm(None)
 
     def exit_application(self):
         self.parentApp.setNextForm(None)
         self.editing = False
         self.parentApp.switchFormNow()
-
-    def on_ok(self):
-        npyscreen.notify_confirm("Use ^X to go explore!")
 
     def change_forms1(self, *args, **keywords):
         change_to = "BLINK"
@@ -325,13 +312,13 @@ class fourthForm(npyscreen.ActionFormWithMenus):
         self.m1 = self.add_menu(name="Main Menu", shortcut="^M")
         self.m1.addItemsFromList([
             ("Exit Application", self.exit_application),
-            ("Use Current Drive List", self.change_forms3)
+            ("Instructions", self.change_forms2)
         ])
 
         self.m2 = self.add_menu(name="Tools", shortcut="b",)
         self.m2.addItemsFromList([
             ("Compare", self.change_forms1),
-            ("Instructions", self.change_forms2),
+            ("Use Current Drive List", self.change_forms3),
             ])
 
     def whenDisplayText(self, argument):
@@ -377,12 +364,12 @@ class fourthForm(npyscreen.ActionFormWithMenus):
 
         npyscreen.notify_confirm("You turned " + str(passDrives) + str(passBlink))
 
-    def change_forms1(self, *args, **keywords):
+    def change_forms2(self, *args, **keywords):
         change_to = "MAIN"
         # Tell the MyTestApp object to change forms.
         self.parentApp.change_form(change_to)
 
-    def change_forms2(self, *args, **keywords):
+    def change_forms1(self, *args, **keywords):
         change_to = "INSTRUCTIONS"
         # Tell the MyTestApp object to change forms.
         self.parentApp.change_form(change_to)
