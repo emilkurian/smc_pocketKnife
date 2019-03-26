@@ -120,13 +120,8 @@ class MainForm(npyscreen.ActionFormWithMenus):
         # The menus are created here.
         self.m1 = self.add_menu(name="Main Menu", shortcut="^M")
         self.m1.addItemsFromList([
-<<<<<<< HEAD:pocketKnife.py
-            ("Exit Application", self.exit_application)
-        ])
-=======
-            ("Exit Application", self.exit_application, "é"),
+            ("Exit Application", self.exit_application, "ï¿½"),
             ])
->>>>>>> 6a18e0495e5e745ca6bc6afb012852619b458d75:npyApp.py
 
         self.m2 = self.add_menu(name="Tools", shortcut="b",)
         self.m2.addItemsFromList([
